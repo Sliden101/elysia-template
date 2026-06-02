@@ -4,9 +4,36 @@ import { cors } from '@elysiajs/cors'
 
 import { otel } from '@api/modules'
 import { insertMessage, getMessages } from '@api/db'
+/*import { leaderboardRoute } from './routes/leaderboard.route'*/ // rest route import
+import { syncAll } from './db/sync'
+import { getLeaderboardByRound, getOverallLeaderboard } from './db/repositories/sqlite/leaderboard.repository'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const clients = new Set<any>()
+
+await syncAll()
+
+setInterval(async()=>{
+  console.log('[cron] syncing')
+  await syncAll()
+    
+  const rd1 = getLeaderboardByRound('rd1')
+  const rd2 = getLeaderboardByRound('rd2')
+  const rd3 = getLeaderboardByRound('rd3')
+  const total=getOverallLeaderboard()
+
+
+  for (const client of clients) {
+    client.send(JSON.stringify({ type: 'leaderboard_rd1', data: rd1 }))
+    client.send(JSON.stringify({ type: 'leaderboard_rd2', data: rd2 }))
+    client.send(JSON.stringify({ type: 'leaderboard_rd3', data: rd3 }))
+    client.send(JSON.stringify({ type: 'leaderboard_total', data: total }))
+
+  }
+
+},10_000)
+
+
 
 export const app = new Elysia()
   .use(
@@ -22,8 +49,8 @@ export const app = new Elysia()
   .use(
     cors({
       origin: 'http://localhost:3000'
-    })
-  )
+    }))
+ /* .use(leaderboardRoute) */ // not sure need rest route or not 
   .ws('/ws', {
     message(ws, message) {
       const content = String(message)
@@ -39,6 +66,16 @@ export const app = new Elysia()
       getMessages(50).then((history) => {
         ws.send(JSON.stringify({ type: 'history', data: history }))
       })
+         const rd1 = getLeaderboardByRound('rd1')
+         const rd2 = getLeaderboardByRound('rd2')
+         const rd3 = getLeaderboardByRound('rd3')
+         const total=getOverallLeaderboard();
+
+       ws.send(JSON.stringify({ type: 'leaderboard_rd1', data: rd1 }))
+       ws.send(JSON.stringify({ type: 'leaderboard_rd2', data: rd2 }))
+       ws.send(JSON.stringify({ type: 'leaderboard_rd3', data: rd3 }))
+       ws.send(JSON.stringify({ type: 'leaderboard_total', data: total }))
+
     },
     close(ws) {
       clients.delete(ws)
