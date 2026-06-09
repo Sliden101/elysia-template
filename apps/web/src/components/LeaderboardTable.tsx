@@ -1,5 +1,8 @@
 'use client'
 import { Leaderboard } from "@api/db/schema/schema"
+import { SearchBar } from "./searchBar"
+import { useState } from "react"
+
 
 interface LeaderboardTableProps {
   data: Leaderboard[]
@@ -11,7 +14,7 @@ const medals = ['🥇', '🥈', '🥉']
 export function LeaderboardTable({ data, rd }: LeaderboardTableProps) {
   const topScore = data.reduce((max, d) => Math.max(max, Number(d[rd])), 0)
 
-  return (
+  return(
     <div className="max-w-6xl mx-auto">
       <div className="bg-white rounded border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
