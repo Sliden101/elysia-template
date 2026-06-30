@@ -10,6 +10,7 @@ export async function upsertLeaderboard(rows: NewLeaderboard[]) {
         .values({
           userId: row.userId,
           fullname: row.fullname,
+          group: row.group ?? '',
           rd1: row.rd1 ?? 0,
           rd2: row.rd2 ?? 0,
           rd3: row.rd3 ?? 0,
@@ -19,6 +20,7 @@ export async function upsertLeaderboard(rows: NewLeaderboard[]) {
           target: leaderboard.userId,
           set: {
             fullname: row.fullname,
+            group: row.group ?? '',
             rd1: row.rd1 ?? 0,
             rd2: row.rd2 ?? 0,
             rd3: row.rd3 ?? 0,
@@ -36,6 +38,7 @@ export async function getLeaderboardByRound(round: 'rd1' | 'rd2' | 'rd3'): Promi
     .select({
       userId: leaderboard.userId,
       fullname: leaderboard.fullname,
+      group: leaderboard.group,
       [round]: leaderboard[round],
     })
     .from(leaderboard)
@@ -50,6 +53,7 @@ export async function getOverallLeaderboard(): Promise<Leaderboard[]> {
     .select({
       userId: leaderboard.userId,
       fullname: leaderboard.fullname,
+      group: leaderboard.group,
       total: leaderboard.total,
     })
     .from(leaderboard)
@@ -61,4 +65,17 @@ export async function getOverallLeaderboard(): Promise<Leaderboard[]> {
     console.error('Error fetching overall leaderboard:', error)
     return []
   }
+}
+
+export async function getGroupLeaderboard(round: 'rd1' | 'rd2' | 'rd3' | 'total'): Promise<{ group: string; score: number }[]> {
+  const results = await sqliteDb
+    .select({
+      group: leaderboard.group,
+      score: sql`SUM(${leaderboard[round]})`.mapWith(Number),
+    })
+    .from(leaderboard)
+    .groupBy(leaderboard.group)
+    .orderBy(desc(sql`SUM(${leaderboard[round]})`))
+
+  return results
 }

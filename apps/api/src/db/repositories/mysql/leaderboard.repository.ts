@@ -7,11 +7,11 @@ import { ROUND_QUIZ_IDS } from '@api/db/config/round.config'
 
 export async function fetchUsers(): Promise<User[]> {
   const rows = await  mysql`
-    SELECT id, firstname, lastname, username
+    SELECT id, firstname, lastname, username, idnumber
     FROM mdl_user
     WHERE deleted = 0
     AND suspended = 0
-  `  as Readonly<User[]>
+  `  
 
   
    const objArr = rows.map((row) =>(
@@ -19,7 +19,8 @@ export async function fetchUsers(): Promise<User[]> {
        {
          id         : Number(row.id),
          firstname  : row.firstname,
-         lastname   : row.lastname
+         lastname   : row.lastname,
+         group      : row.idnumber?? ''
 
        } satisfies User
    ))

@@ -19,6 +19,7 @@ export function transformLeaderboard(users : User[], grades: quizGrade[]) : NewL
        return {
           userId:   user.id,
           fullname: `${user.firstname} ${user.lastname}`,
+          group:    user.group,
           rd1,
           rd2,
           rd3,

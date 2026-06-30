@@ -11,6 +11,7 @@ export async function syncLeaderboard() {
     fetchGrades(),
   ])
 
+
   const transformed = transformLeaderboard(users, grades)
   upsertLeaderboard(transformed)
 

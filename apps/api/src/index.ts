@@ -36,7 +36,7 @@ setInterval(async()=>{
 
   }
 
-},10_000)
+},3_000)
 
 
 
@@ -55,26 +55,16 @@ export const app = new Elysia()
     cors({
       origin: 'http://localhost:3000'
     }))
- /* .use(leaderboardRoute) */ // not sure need rest route or not 
   .ws('/ws', {
-    message(ws, message) {
-      const content = String(message)
-      insertMessage(content).then(([saved]) => {
-        const broadcast = JSON.stringify({ type: 'message', data: saved })
-        for (const client of clients) {
-          client.send(broadcast)
-        }
-      })
-    },
+    
     async open(ws) {
       clients.add(ws)
-      getMessages(50).then((history) => {
-        ws.send(JSON.stringify({ type: 'history', data: history }))
-      })
+      
          const rd1 = await getLeaderboardByRound('rd1')
          const rd2 = await getLeaderboardByRound('rd2')
          const rd3 = await getLeaderboardByRound('rd3')
          const total = await getOverallLeaderboard();
+
 
        ws.send(JSON.stringify({ type: 'leaderboard_rd1', data: rd1 }))
        ws.send(JSON.stringify({ type: 'leaderboard_rd2', data: rd2 }))
