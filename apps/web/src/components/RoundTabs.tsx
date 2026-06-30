@@ -10,6 +10,7 @@ export function RoundTabs() {
     { number: 2, label: "② Round 2", status: "Upcoming", href: "/leaderboard/rd2" },
     { number: 3, label: "③ Round 3", status: "Upcoming", href: "/leaderboard/rd3" },
     { number: 4, label: "🏆 Total", status: "", href: "/leaderboard/total" },
+    { number: 5, label: "✨ Duo", status: "Duolingo", href: "/leaderboard/duo" },
   ];
 
   return (

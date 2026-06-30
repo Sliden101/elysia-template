@@ -14,6 +14,7 @@ type MessageItem = {
 type LeaderboardItem = {
   userId  : number
   fullname: string
+  group   : string
   rd1     : number
   rd2     : number
   rd3     : number

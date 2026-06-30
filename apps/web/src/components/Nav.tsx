@@ -10,7 +10,7 @@ export default function Nav(){
 
     const pathname = usePathname();
 
-    const shouldShowNav = ['/','/leaderboard/rd1', '/leaderboard/rd2', '/leaderboard/rd3','/leaderboard/total'].includes(pathname);
+    const shouldShowNav = ['/','/leaderboard/rd1', '/leaderboard/rd2', '/leaderboard/rd3','/leaderboard/total', '/leaderboard/duo'].includes(pathname);
   
   if (!shouldShowNav) {
     return null;
