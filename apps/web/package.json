@@ -32,7 +32,7 @@
         "@vitest/ui": "4.0.8",
         "config": "workspace:*",
         "eslint": "^9.34.0",
-        "jsdom": "^27.1.0",
+        "jsdom": "^29.1.1",
         "tailwindcss": "^4.1.17",
         "typescript": "^5.9.3",
         "vite-tsconfig-paths": "^5.1.4",
