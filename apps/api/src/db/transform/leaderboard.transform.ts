@@ -15,6 +15,7 @@ export function transformLeaderboard(users : User[], grades: quizGrade[]) : NewL
        const rd1 = sumRound(ROUND_QUIZ_IDS.rd1)
        const rd2 = sumRound(ROUND_QUIZ_IDS.rd2)
        const rd3 = sumRound(ROUND_QUIZ_IDS.rd3)
+       const physical = sumRound(ROUND_QUIZ_IDS.physical)
 
        return {
           userId:   user.id,
@@ -23,7 +24,8 @@ export function transformLeaderboard(users : User[], grades: quizGrade[]) : NewL
           rd1,
           rd2,
           rd3,
-          total: rd1 + rd2 + rd3,
+          physical,
+          total: rd1 + rd2 + rd3 + physical,
        }
 
      })

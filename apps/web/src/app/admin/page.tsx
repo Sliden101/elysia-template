@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react'
 import { useWebSocket } from '@web/hooks/useWebSocket'
-import { LeaderboardTable } from '@web/components/LeaderboardTable'
-
+import { DuoLeaderboard } from '@web/components/DuoLeaderboard'
 export default function AdminPage() {
   const { leaderboardTotal } = useWebSocket()
   const [token, setToken] = useState('')
@@ -16,35 +15,32 @@ export default function AdminPage() {
   const [status, setStatus] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const r1 = Number(rd1) || 0
-    const r2 = Number(rd2) || 0
-    const r3 = Number(rd3) || 0
-    const row = {
-      userId: Number(userId),
-      fullname,
-      rd1: r1,
-      rd2: r2,
-      rd3: r3,
-      total: r1 + r2 + r3
-    }
+  e.preventDefault()
 
-    setStatus('saving')
-    try {
-      const res = await fetch('http://localhost:3001/admin/leaderboard', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-admin-token': token
-        },
-        body: JSON.stringify([row])
-      })
-      if (res.ok) setStatus('saved')
-      else setStatus(`error ${res.status}`)
-    } catch (err) {
-      setStatus('network error')
-    }
+  const row: Record<string, unknown> = { userId: Number(userId) }
+
+  if (fullname.trim() !== '') row.fullname = fullname
+  if (rd1.trim() !== '') row.rd1 = Number(rd1)
+  if (rd2.trim() !== '') row.rd2 = Number(rd2)
+  if (rd3.trim() !== '') row.rd3 = Number(rd3)
+  // no `total` — the backend recalculates it from whatever rd1/rd2/rd3 end up being
+
+  setStatus('saving')
+  try {
+    const res = await fetch('http://localhost:3001/admin/leaderboard', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-admin-token': token
+      },
+      body: JSON.stringify([row])
+    })
+    if (res.ok) setStatus('saved')
+    else setStatus(`error ${res.status}`)
+  } catch (err) {
+    setStatus('network error')
   }
+}
 
   async function handleVerify(e?: React.FormEvent) {
     e?.preventDefault()
@@ -98,7 +94,7 @@ export default function AdminPage() {
       <hr style={{margin:'24px 0'}} />
 
       <h2>Current total leaderboard</h2>
-      <LeaderboardTable data={leaderboardTotal} rd="total" />
+      <DuoLeaderboard />
     </div>
   )
 }
