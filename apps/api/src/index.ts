@@ -10,8 +10,8 @@ import { otel } from '@api/modules'
 /*import { leaderboardRoute } from './routes/leaderboard.route'*/ // rest route import
 import { syncAll } from './db/sync'
 import { getLeaderboardByRound, getOverallLeaderboard } from './db/repositories/sqlite/leaderboard.repository'
-import { upsertLeaderboard } from './db/repositories/sqlite/leaderboard.repository'
 import { isAdminRequest } from './admin/auth'
+import { partialUpdateLeaderboard } from './db/repositories/sqlite/leaderboard.repository'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const clients = new Set<any>()
@@ -21,10 +21,11 @@ await syncAll()
 setInterval(async()=>{
   console.log('[cron] syncing')
   await syncAll()
-    
+
   const rd1 = await getLeaderboardByRound('rd1')
   const rd2 = await getLeaderboardByRound('rd2')
   const rd3 = await getLeaderboardByRound('rd3')
+  const physical = await getLeaderboardByRound('physical')
   const total = await getOverallLeaderboard()
 
 
@@ -32,6 +33,7 @@ setInterval(async()=>{
     client.send(JSON.stringify({ type: 'leaderboard_rd1', data: rd1 }))
     client.send(JSON.stringify({ type: 'leaderboard_rd2', data: rd2 }))
     client.send(JSON.stringify({ type: 'leaderboard_rd3', data: rd3 }))
+    client.send(JSON.stringify({ type: 'leaderboard_physical', data: physical }))
     client.send(JSON.stringify({ type: 'leaderboard_total', data: total }))
 
   }
@@ -59,16 +61,18 @@ export const app = new Elysia()
     
     async open(ws) {
       clients.add(ws)
-      
+
          const rd1 = await getLeaderboardByRound('rd1')
          const rd2 = await getLeaderboardByRound('rd2')
          const rd3 = await getLeaderboardByRound('rd3')
+         const physical = await getLeaderboardByRound('physical')
          const total = await getOverallLeaderboard();
 
 
        ws.send(JSON.stringify({ type: 'leaderboard_rd1', data: rd1 }))
        ws.send(JSON.stringify({ type: 'leaderboard_rd2', data: rd2 }))
        ws.send(JSON.stringify({ type: 'leaderboard_rd3', data: rd3 }))
+       ws.send(JSON.stringify({ type: 'leaderboard_physical', data: physical }))
        ws.send(JSON.stringify({ type: 'leaderboard_total', data: total }))
 
     },
@@ -91,18 +95,20 @@ export const app = new Elysia()
     if (!Array.isArray(rows)) return new Response('expected array of rows', { status: 400 })
 
     // upsert into sqlite
-    await upsertLeaderboard(rows as any)
+    await partialUpdateLeaderboard(rows as any)
 
     // broadcast updated leaderboards to WS client
     const rd1 = await getLeaderboardByRound('rd1')
     const rd2 = await getLeaderboardByRound('rd2')
     const rd3 = await getLeaderboardByRound('rd3')
+    const physical = await getLeaderboardByRound('physical')
     const total = await getOverallLeaderboard()
 
     for (const client of clients) {
       client.send(JSON.stringify({ type: 'leaderboard_rd1', data: rd1 }))
       client.send(JSON.stringify({ type: 'leaderboard_rd2', data: rd2 }))
       client.send(JSON.stringify({ type: 'leaderboard_rd3', data: rd3 }))
+      client.send(JSON.stringify({ type: 'leaderboard_physical', data: physical }))
       client.send(JSON.stringify({ type: 'leaderboard_total', data: total }))
     }
 

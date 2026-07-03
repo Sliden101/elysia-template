@@ -14,7 +14,7 @@ export async function fetchUsers(): Promise<User[]> {
   `  
 
   
-   const objArr = rows.map((row) =>(
+   const objArr = (rows as any[]).map((row) =>(
 
        {
          id         : Number(row.id),
