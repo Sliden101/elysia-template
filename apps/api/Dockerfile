@@ -17,7 +17,7 @@ COPY packages/config packages/config
 ENV NODE_ENV=production
 
 WORKDIR /app/apps/api
-RUN bun run build
+RUN bun build --compile --minify-whitespace --minify-syntax --target bun --outfile server ./src/index.ts && bunx tsc
 
 RUN bun install --production
 

@@ -27,7 +27,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 WORKDIR /app/apps/web
-RUN bun run build
+RUN bunx next build && cp -r .next/static .next/standalone/apps/web/.next/static && cp -r public .next/standalone/apps/web/public
 
 # -----------
 FROM node:22-slim AS production
