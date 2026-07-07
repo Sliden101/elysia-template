@@ -16,7 +16,7 @@
     },
     "dependencies": {
         "@elysiajs/cors": "^1.4.0",
-        "@elysiajs/opentelemetry": "1.4.6",
+        "@elysiajs/opentelemetry": "1.4.11",
         "@elysiajs/openapi": "^1.4.11",
         "drizzle-orm": "^0.40.0",
         "elysia": "catalog:"
