@@ -1,5 +1,5 @@
 export interface quizGrade  {
-    userid : number
+    userid : string
     quiz: number
     grade : number
 }

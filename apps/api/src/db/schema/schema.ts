@@ -1,8 +1,9 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
 
 export const leaderboard = sqliteTable('leaderboard', {
-  userId:    integer('userId').primaryKey(),
+  userId:    text('userId').primaryKey(),
   fullname:  text('fullname').notNull(),
+  idnumber:  text('idnumber').notNull().default(''),
   group:     text('group').notNull().default(''),
   rd1:       integer('rd1').notNull().default(0),
   rd2:       integer('rd2').notNull().default(0),

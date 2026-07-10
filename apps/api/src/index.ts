@@ -55,7 +55,7 @@ export const app = new Elysia()
   .use(otel)
   .use(
     cors({
-      origin: 'http://localhost:3000'
+      origin: process.env.CORS_ORIGIN ?? 'http://localhost:3000'
     }))
   .ws('/ws', {
     
