@@ -12,22 +12,26 @@ export default function AdminPage() {
   const [rd1, setRd1] = useState('')
   const [rd2, setRd2] = useState('')
   const [rd3, setRd3] = useState('')
+  const [physical, setPhysical] = useState('')
+  const [lockFromSync, setLockFromSync] = useState(true)
+  const [mode, setMode] = useState<'set' | 'add'>('set')
   const [status, setStatus] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
   e.preventDefault()
 
-  const row: Record<string, unknown> = { userId: Number(userId) }
+  const row: Record<string, unknown> = { userId, source: lockFromSync ? 'manual' : 'mysql', mode }
 
   if (fullname.trim() !== '') row.fullname = fullname
   if (rd1.trim() !== '') row.rd1 = Number(rd1)
   if (rd2.trim() !== '') row.rd2 = Number(rd2)
   if (rd3.trim() !== '') row.rd3 = Number(rd3)
-  // no `total` — the backend recalculates it from whatever rd1/rd2/rd3 end up being
+  if (physical.trim() !== '') row.physical = Number(physical)
+  // no `total` — the backend recalculates it from whatever rd1/rd2/rd3/physical end up being
 
   setStatus('saving')
   try {
-    const res = await fetch('http://localhost:3001/admin/leaderboard', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/leaderboard`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -46,7 +50,7 @@ export default function AdminPage() {
     e?.preventDefault()
     setStatus('verifying')
     try {
-      const res = await fetch('http://localhost:3001/admin/verify', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/verify`, {
         method: 'POST',
         headers: {
           'x-admin-token': token
@@ -71,7 +75,7 @@ export default function AdminPage() {
 
       {!isAuthed ? (
         <form onSubmit={handleVerify} style={{display:'grid',gap:8,maxWidth:480}}>
-          <input placeholder="admin token" value={token} onChange={e=>setToken(e.target.value)} />
+          <input type="password" placeholder="admin token" value={token} onChange={e=>setToken(e.target.value)} />
           <div>
             <button type="submit">Verify</button>
             <span style={{marginLeft:12}}>{status}</span>
@@ -79,11 +83,20 @@ export default function AdminPage() {
         </form>
       ) : (
         <form onSubmit={handleSubmit} style={{display:'grid',gap:8,maxWidth:480}}>
-        <input placeholder="userId (number)" value={userId} onChange={e=>setUserId(e.target.value)} />
+        <input placeholder="userId (idnumber)" value={userId} onChange={e=>setUserId(e.target.value)} />
         <input placeholder="fullname" value={fullname} onChange={e=>setFullname(e.target.value)} />
         <input placeholder="rd1" value={rd1} onChange={e=>setRd1(e.target.value)} />
         <input placeholder="rd2" value={rd2} onChange={e=>setRd2(e.target.value)} />
         <input placeholder="rd3" value={rd3} onChange={e=>setRd3(e.target.value)} />
+        <input placeholder="physical" value={physical} onChange={e=>setPhysical(e.target.value)} />
+        <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13}}>
+          <input type="checkbox" checked={lockFromSync} onChange={e=>setLockFromSync(e.target.checked)} />
+          Lock from MySQL sync
+        </label>
+        <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13}}>
+          <input type="checkbox" checked={mode === 'add'} onChange={e=>setMode(e.target.checked ? 'add' : 'set')} />
+          Add to existing score (unchecked = replace)
+        </label>
           <div>
             <button type="submit">Save</button>
             <span style={{marginLeft:12}}>{status}</span>

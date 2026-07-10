@@ -10,8 +10,9 @@ type MessageItem = {
 }
 
 type LeaderboardItem = {
-  userId  : number
+  userId  : string
   fullname: string
+  idnumber: string
   group   : string
   rd1     : number
   rd2     : number

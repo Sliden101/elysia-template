@@ -135,15 +135,20 @@ function ScoreBar({ score, maxScore }: { score: number; maxScore: number }) {
     <div className="flex items-center gap-3">
       <div className="flex-1 h-2 bg-slate-100 overflow-hidden">
         <motion.div
-          initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
           className="h-full bg-orange-500"
         />
       </div>
-      <span className="font-black text-slate-700 min-w-[60px] text-right">
+      <motion.span
+        key={score}
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="font-black text-slate-700 min-w-[60px] text-right"
+      >
         {score.toLocaleString()}
-      </span>
+      </motion.span>
     </div>
   )
 }
@@ -167,7 +172,7 @@ function LeaderboardRow({
       layout
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3, delay: rank * 0.03 }}
+      transition={{ duration: 0.15, delay: 0 }}
       className={`grid grid-cols-[60px_1fr_80px_140px] sm:grid-cols-[70px_1fr_100px_200px] items-center px-4 sm:px-6 py-3 border-b border-slate-200 hover:bg-slate-50 transition-colors ${
         rank <= 3 ? 'bg-amber-50/50' : rank % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
       }`}
@@ -176,6 +181,7 @@ function LeaderboardRow({
 
       <div className="px-3 sm:px-4 min-w-0">
         <p className="font-bold text-slate-800 truncate">{entry.fullname}</p>
+        <p className="text-xs text-slate-400 truncate">{entry.idnumber}</p>
       </div>
 
       <div className="px-2">
@@ -208,7 +214,7 @@ function GroupRow({
       layout
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3, delay: rank * 0.03 }}
+      transition={{ duration: 0.15, delay: 0 }}
       className={`grid grid-cols-[60px_1fr_140px] sm:grid-cols-[70px_1fr_200px] items-center px-4 sm:px-6 py-3 border-b border-slate-200 hover:bg-slate-50 transition-colors ${
         rank % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
       }`}
@@ -333,7 +339,6 @@ export function DuoLeaderboard() {
                 />
                 {connected ? 'LIVE' : 'OFFLINE'}
               </span>
-              <span className="text-xs text-slate-400 font-medium">Updates realtime</span>
             </motion.div>
           </div>
         </div>
@@ -400,9 +405,9 @@ export function DuoLeaderboard() {
           )}
         </AnimatePresence>
 
-        {/* Podium - Only for individual views */}
+        {/* Podium - Always shows real top 3, not search-filtered */}
         {mainTab !== 'groups' && (
-          <Podium data={filteredData as Leaderboard[]} rd={currentRd} />
+          <Podium data={sourceData as Leaderboard[]} rd={currentRd} />
         )}
 
         {/* Main Card - RECTANGULAR */}
@@ -474,7 +479,9 @@ export function DuoLeaderboard() {
             <AnimatePresence mode="popLayout">
               {filteredData.length > 0 ? (
                 filteredData.map((entry: any, i) => {
-                  const rank = i + 1
+                  const rank = mainTab === 'groups'
+                    ? i + 1
+                    : sourceData.indexOf(entry) + 1
                   return mainTab === 'groups' ? (
                     <GroupRow key={entry.name} entry={entry} rank={rank} />
                   ) : (
@@ -507,7 +514,7 @@ export function DuoLeaderboard() {
           </div>
           <div className="flex items-center gap-2">
             <Timer size={14} />
-            <span className="font-medium">Auto-refresh every 30s</span>
+            <span className="font-medium">Auto-refresh</span>
           </div>
           <div className="flex items-center gap-2">
             <Users size={14} />

@@ -7,7 +7,7 @@ export async function upsertLeaderboard(
   source: 'mysql' | 'manual' = 'manual'
 ) {
   await sqliteDb.transaction(async (tx) => {
-    let skipIds: number[] = []
+    let skipIds: string[] = []
 
     if (source === 'mysql') {
       // don't let the cron sync clobber rows an admin edited by hand
@@ -26,6 +26,7 @@ export async function upsertLeaderboard(
         .values({
           userId: row.userId,
           fullname: row.fullname,
+          idnumber: row.idnumber ?? '',
           group: row.group ?? '',
           rd1: row.rd1 ?? 0,
           rd2: row.rd2 ?? 0,
@@ -39,6 +40,7 @@ export async function upsertLeaderboard(
           target: leaderboard.userId,
           set: {
             fullname: row.fullname,
+            idnumber: row.idnumber ?? '',
             group: row.group ?? '',
             rd1: row.rd1 ?? 0,
             rd2: row.rd2 ?? 0,
@@ -61,6 +63,7 @@ export async function getLeaderboardByRound(round: 'rd1' | 'rd2' | 'rd3' | 'phys
     .select({
       userId: leaderboard.userId,
       fullname: leaderboard.fullname,
+      idnumber: leaderboard.idnumber,
       group: leaderboard.group,
       [round]: leaderboard[round],
     })
@@ -76,6 +79,7 @@ export async function getOverallLeaderboard(): Promise<Leaderboard[]> {
     .select({
       userId: leaderboard.userId,
       fullname: leaderboard.fullname,
+      idnumber: leaderboard.idnumber,
       group: leaderboard.group,
       total: leaderboard.total,
     })
@@ -106,7 +110,7 @@ export async function getGroupLeaderboard(round: 'rd1' | 'rd2' | 'rd3' | 'physic
 
 
 export async function partialUpdateLeaderboard(
-  rows: (Partial<NewLeaderboard> & { userId: number })[]
+  rows: (Partial<NewLeaderboard> & { userId: string; source?: 'manual' | 'mysql'; mode?: 'set' | 'add' })[]
 ) {
   await sqliteDb.transaction(async (tx) => {
     for (const row of rows) {
@@ -116,14 +120,22 @@ export async function partialUpdateLeaderboard(
         .where(eq(leaderboard.userId, row.userId))
 
       const existing = existingRows[0]
+      const source = row.source ?? 'manual'
+      const mode = row.mode ?? 'set'
+
+      const apply = (val: number | undefined, existingVal: number | undefined) => {
+        if (val === undefined) return existingVal ?? 0
+        return mode === 'add' ? (existingVal ?? 0) + val : val
+      }
 
       const merged = {
         fullname: row.fullname ?? existing?.fullname,
+        idnumber: row.idnumber ?? existing?.idnumber ?? '',
         group: row.group ?? existing?.group ?? '',
-        rd1: row.rd1 ?? existing?.rd1 ?? 0,
-        rd2: row.rd2 ?? existing?.rd2 ?? 0,
-        rd3: row.rd3 ?? existing?.rd3 ?? 0,
-        physical: row.physical ?? existing?.physical ?? 0,
+        rd1: apply(row.rd1, existing?.rd1),
+        rd2: apply(row.rd2, existing?.rd2),
+        rd3: apply(row.rd3, existing?.rd3),
+        physical: apply(row.physical, existing?.physical),
       }
 
       if (!merged.fullname) {
@@ -135,14 +147,14 @@ export async function partialUpdateLeaderboard(
       if (existing) {
         await tx
           .update(leaderboard)
-          .set({ ...merged, total, source: 'manual', updatedAt: new Date() })
+          .set({ ...merged, total, source, updatedAt: new Date() })
           .where(eq(leaderboard.userId, row.userId))
       } else {
         await tx.insert(leaderboard).values({
           userId: row.userId,
           ...merged,
           total,
-          source: 'manual',
+          source,
           updatedAt: new Date(),
         })
       }

@@ -1,7 +1,8 @@
 
 export type User = {
-    id       : number
+    id       : string
     firstname: string
     lastname : string
-    group   : string
+    idnumber : string
+    group    : string
 }
