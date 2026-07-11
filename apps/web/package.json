@@ -4,7 +4,8 @@
     "private": true,
     "scripts": {
         "dev": "next dev --turbopack",
-        "build": "next build && cp -r .next/static .next/standalone/apps/web/.next/static && cp -r public .next/standalone/apps/web/public",
+        "data:export": "bun ../../scripts/export-leaderboard.ts",
+        "build": "bun run data:export && next build",
         "start": "next start",
         "lint": "next lint",
         "docker": "cd ../.. && docker build -t mono-web -f ./apps/web/Dockerfile .",

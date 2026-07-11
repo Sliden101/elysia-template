@@ -1,1 +1,1 @@
-export { api, wsSubscribe } from './api'
+// libs package — no longer re-exports API client

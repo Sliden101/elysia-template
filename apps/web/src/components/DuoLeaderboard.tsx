@@ -2,11 +2,22 @@
 
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'motion/react'
-import { Trophy, Search, X, Zap, Users, BarChart3, Timer } from 'lucide-react'
+import { Trophy, Search, X, Users, BarChart3 } from 'lucide-react'
 import { useState, useMemo } from 'react'
-import { useWebSocket } from '@web/hooks/useWebSocket'
+import { useLeaderboard } from '@web/hooks/useLeaderboard'
 import { LoadingScreen } from './LoadingScreen'
-import { Leaderboard } from '@api/db/schema/schema'
+
+type LeaderboardEntry = {
+  userId: string
+  fullname: string
+  group: string
+  rd1?: number
+  rd2?: number
+  rd3?: number
+  physical?: number
+  total?: number
+  [key: string]: string | number | undefined
+}
 
 import cfccLogo from '../assets/CFCC.png'
 
@@ -21,7 +32,7 @@ const ROUND_CONFIG: Record<RoundTab, { label: string; color: string; borderColor
 }
 
 // Podium Component for Top 3 - RECTANGULAR
-function Podium({ data, rd }: { data: Leaderboard[]; rd: 'rd1' | 'rd2' | 'rd3' | 'physical' | 'total' }) {
+function Podium({ data, rd }: { data: LeaderboardEntry[]; rd: 'rd1' | 'rd2' | 'rd3' | 'physical' | 'total' }) {
   if (data.length === 0) return null
 
   const [first, second, third] = [data[0], data[1], data[2]]
@@ -155,7 +166,7 @@ function LeaderboardRow({
   rd,
   maxScore,
 }: {
-  entry: Leaderboard
+  entry: LeaderboardEntry
   rank: number
   rd: 'rd1' | 'rd2' | 'rd3' | 'physical' | 'total'
   maxScore: number
@@ -247,13 +258,13 @@ function EmptyState({ searchTerm }: { searchTerm: string }) {
 
 // Main Component
 export function DuoLeaderboard() {
-  const { connected, leaderboardRd1, leaderboardRd2, leaderboardRd3, leaderboardPhysical, leaderboardTotal } =
-    useWebSocket()
+  const { leaderboardRd1, leaderboardRd2, leaderboardRd3, leaderboardPhysical, leaderboardTotal, loading } =
+    useLeaderboard()
 
   const hasData = [leaderboardRd1, leaderboardRd2, leaderboardRd3, leaderboardPhysical, leaderboardTotal].some(
     (arr) => arr.length > 0
   )
-  const isLoading = !connected || !hasData
+  const isLoading = loading || !hasData
 
   const [mainTab, setMainTab] = useState<MainTab>('overall')
   const [roundTab, setRoundTab] = useState<RoundTab>('rd1')
@@ -277,7 +288,7 @@ export function DuoLeaderboard() {
     const groupMap = new Map<string, number>()
     sourceData.forEach((entry) => {
       const g = entry.group || 'Unassigned'
-      groupMap.set(g, (groupMap.get(g) || 0) + Number(entry[currentRd]))
+      groupMap.set(g, (groupMap.get(g) || 0) + Number((entry as Record<string, unknown>)[currentRd]))
     })
 
     return Array.from(groupMap.entries())
@@ -297,7 +308,7 @@ export function DuoLeaderboard() {
 
   const maxScore = useMemo(() => {
     if (mainTab === 'groups' || filteredData.length === 0) return 0
-    return Math.max(...(filteredData as Leaderboard[]).map((e) => Number(e[currentRd])))
+    return Math.max(...(filteredData as Record<string, unknown>[]).map((e) => Number(e[currentRd])))
   }, [filteredData, currentRd, mainTab])
 
   if (isLoading) return <LoadingScreen />
@@ -306,36 +317,13 @@ export function DuoLeaderboard() {
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <header className="bg-white border-b-2 border-slate-200 sticky top-0 z-20">
-        <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3"
-            >
-              <Image src={cfccLogo} alt="CFCC" width={140} height={70} className="h-10 w-auto" />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3"
-            >
-              <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 border-2 text-xs font-bold ${
-                  connected
-                    ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
-                    : 'bg-red-50 border-red-500 text-red-700'
-                }`}
-              >
-                <span
-                  className={`w-2 h-2 ${connected ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}
-                />
-                {connected ? 'LIVE' : 'OFFLINE'}
-              </span>
-              <span className="text-xs text-slate-400 font-medium">Updates realtime</span>
-            </motion.div>
-          </div>
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <Image src={cfccLogo} alt="CFCC" width={140} height={70} className="h-10 w-auto" />
+          </motion.div>
         </div>
       </header>
 
@@ -402,7 +390,7 @@ export function DuoLeaderboard() {
 
         {/* Podium - Only for individual views */}
         {mainTab !== 'groups' && (
-          <Podium data={filteredData as Leaderboard[]} rd={currentRd} />
+          <Podium data={filteredData as LeaderboardEntry[]} rd={currentRd} />
         )}
 
         {/* Main Card - RECTANGULAR */}
@@ -501,14 +489,6 @@ export function DuoLeaderboard() {
           transition={{ delay: 0.4 }}
           className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400"
         >
-          <div className="flex items-center gap-2">
-            <Zap size={14} className="text-orange-500" />
-            <span className="font-medium">Real-time updates</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Timer size={14} />
-            <span className="font-medium">Auto-refresh every 30s</span>
-          </div>
           <div className="flex items-center gap-2">
             <Users size={14} />
             <span className="font-medium">

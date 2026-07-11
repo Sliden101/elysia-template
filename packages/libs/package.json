@@ -8,12 +8,7 @@
         "test:unit": "bun test",
         "coverage": "bun test --coverage"
     },
-    "dependencies": {
-        "elysia": "catalog:",
-        "ws": "^8.18.2"
-    },
     "devDependencies": {
-        "@elysiajs/eden": "1.4.4",
         "config": "workspace:*",
         "eslint": "^9.34.0",
         "typescript": "^5.9.2"
