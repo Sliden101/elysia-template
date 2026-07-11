@@ -273,8 +273,8 @@ export function DuoLeaderboard() {
     physical: leaderboardPhysical,
   }
 
-  const currentRd = mainTab === 'overall' ? 'total' : roundTab
-  const sourceData = mainTab === 'overall' ? leaderboardTotal : roundDataMap[roundTab]
+  const currentRd = (mainTab === 'overall' || mainTab === 'groups') ? 'total' : roundTab
+  const sourceData = (mainTab === 'overall' || mainTab === 'groups') ? leaderboardTotal : roundDataMap[roundTab]
 
   // Group calculations
   const groupData = useMemo(() => {
