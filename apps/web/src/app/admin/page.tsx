@@ -29,7 +29,6 @@ export default function AdminPage() {
   if (rd3.trim() !== '') row.rd3 = Number(rd3)
   if (physical.trim() !== '') row.physical = Number(physical)
   if (group.trim() !== '') row.group = group
-  // no `total` — the backend recalculates it from whatever rd1/rd2/rd3/physical end up being
 
   setStatus('saving')
   try {
