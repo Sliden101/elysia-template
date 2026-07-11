@@ -9,6 +9,7 @@ export default function AdminPage() {
   const [isAuthed, setIsAuthed] = useState(false)
   const [userId, setUserId] = useState('')
   const [fullname, setFullname] = useState('')
+  const [group, setGroup] = useState('')
   const [rd1, setRd1] = useState('')
   const [rd2, setRd2] = useState('')
   const [rd3, setRd3] = useState('')
@@ -27,6 +28,7 @@ export default function AdminPage() {
   if (rd2.trim() !== '') row.rd2 = Number(rd2)
   if (rd3.trim() !== '') row.rd3 = Number(rd3)
   if (physical.trim() !== '') row.physical = Number(physical)
+  if (group.trim() !== '') row.group = group
   // no `total` — the backend recalculates it from whatever rd1/rd2/rd3/physical end up being
 
   setStatus('saving')
@@ -84,6 +86,7 @@ export default function AdminPage() {
       ) : (
         <form onSubmit={handleSubmit} style={{display:'grid',gap:8,maxWidth:480}}>
         <input placeholder="userId (idnumber)" value={userId} onChange={e=>setUserId(e.target.value)} />
+        <input placeholder="group" value={group} onChange={e=>setGroup(e.target.value)} />
         <input placeholder="fullname" value={fullname} onChange={e=>setFullname(e.target.value)} />
         <input placeholder="rd1" value={rd1} onChange={e=>setRd1(e.target.value)} />
         <input placeholder="rd2" value={rd2} onChange={e=>setRd2(e.target.value)} />
