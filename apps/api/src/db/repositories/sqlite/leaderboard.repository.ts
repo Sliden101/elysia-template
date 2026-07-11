@@ -9,17 +9,26 @@ export async function upsertLeaderboard(
   await sqliteDb.transaction(async (tx) => {
     let skipIds: string[] = []
 
+    let existingPhysical = new Map<string, number>()
+
     if (source === 'mysql') {
-      // don't let the cron sync clobber rows an admin edited by hand
       const manualRows = await tx
         .select({ userId: leaderboard.userId })
         .from(leaderboard)
         .where(eq(leaderboard.source, 'manual'))
       skipIds = manualRows.map((r) => r.userId)
+
+      const mysqlRows = await tx
+        .select({ userId: leaderboard.userId, physical: leaderboard.physical })
+        .from(leaderboard)
+        .where(eq(leaderboard.source, 'mysql'))
+      existingPhysical = new Map(mysqlRows.map(r => [r.userId, r.physical]))
     }
 
     for (const row of rows) {
       if (source === 'mysql' && row.userId != null && skipIds.includes(row.userId)) continue
+
+      const physicalVal = row.physical ?? existingPhysical.get(row.userId) ?? 0
 
       await tx
         .insert(leaderboard)
@@ -31,7 +40,7 @@ export async function upsertLeaderboard(
           rd1: row.rd1 ?? 0,
           rd2: row.rd2 ?? 0,
           rd3: row.rd3 ?? 0,
-          physical: row.physical ?? 0,
+          physical: physicalVal,
           total: row.total ?? 0,
           source,
           updatedAt: new Date(),
@@ -45,7 +54,7 @@ export async function upsertLeaderboard(
             rd1: row.rd1 ?? 0,
             rd2: row.rd2 ?? 0,
             rd3: row.rd3 ?? 0,
-            physical: row.physical ?? 0,
+            physical: physicalVal,
             total: row.total ?? 0,
             source,
             updatedAt: new Date(),
